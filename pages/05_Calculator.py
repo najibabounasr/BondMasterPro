@@ -1,17 +1,47 @@
 import streamlit as st
-import numpy as np
 import pandas as pd
 from scipy import optimize
+import numpy as np
 
 # Initialize streamlit 
 st.title("Bond Calculator")
 
 st.warning("Please note that zeros entered into the inputs may result in errors.")
 # Initialize the functions
-def calculate_bond_present_value(coupon_rate, future_value, ytm, n):
-    coupon_payment = (coupon_rate * future_value) / n
-    present_value = (coupon_payment * (1 - (1 + ytm/n)**(-n))) / (ytm/n) + future_value / (1 + ytm/n)**n
-    return present_value
+def calculate_bond_present_value(coupon_rate, face_value, ytm, n):
+    pv_selection = st.selectbox("Would you like to use the simple or complex present value formula?", ['Bond Master Pro', 'Annuities Only', 'Lump Sum Only'])
+    if pv_selection == 'Bond Master Pro':
+        if coupon_rate == 0:
+            return face_value / (1 + ytm)**n
+        elif ytm == 0:  # No discounting
+            return (coupon_rate * face_value) + face_value
+        else:  # Regular case
+            coupon_payment = face_value * (coupon_rate / freq_per_anum)
+            present_value_paid_at_maturity = face_value / (1 + ytm/freq_per_anum)**(n)
+            present_value_of_regular_payments = coupon_payment * (1 - (1 + ytm/freq_per_anum)**(-n)) / (ytm/freq_per_anum)
+            present_value = present_value_paid_at_maturity + present_value_of_regular_payments
+            return present_value
+    elif pv_selection == 'Annuities Only':
+        if coupon_rate == 0:
+            return 0
+        elif ytm == 0:  # No discounting
+            coupon_payment = face_value * (coupon_rate / freq_per_anum)
+            return coupon_payment * n
+        else:  # Regular case
+            coupon_payment = face_value * (coupon_rate / freq_per_anum)
+            present_value_of_regular_payments = coupon_payment * (1 - (1 + ytm/freq_per_anum)**(-n)) / (ytm/freq_per_anum)
+            present_value =  present_value_of_regular_payments
+            return present_value
+    elif pv_selection == 'Lump Sum Only':
+        if coupon_rate == 0:
+            return face_value / (1 + ytm)**n
+        elif ytm == 0:  # No discounting
+            return (coupon_rate * face_value) + face_value
+        else:  # Regular case
+            coupon_payment = face_value * (coupon_rate / freq_per_anum)
+            present_value_paid_at_maturity = face_value / (1 + ytm/freq_per_anum)**(n)
+            present_value = present_value_paid_at_maturity
+            return present_value
 
 def calculate_bond_ytm(price, par, t, coupon, freq):
     periods = t*freq
@@ -41,7 +71,7 @@ if metric == 'Present Value':
     coupon_rate = st.number_input("Coupon Rate (%):", min_value=0.0)
     t = st.number_input("Maturity (years):", min_value=0.0)
     frequency = st.selectbox("Frequency", ['Annual', 'Semi-annual', 'Quarterly'])
-
+    ytm = st.number_input("Yield to Maturity (%):", min_value=0.0)
     if frequency == 'Semi-annual':
         freq_per_anum = 2
     elif frequency == 'Annual':
@@ -50,9 +80,8 @@ if metric == 'Present Value':
         freq_per_anum = 4
 
     n = t * freq_per_anum
-    ytm = st.number_input("Yield to Maturity (%):", min_value=0.0)
-    present_value = calculate_bond_present_value(coupon_rate/100, par, ytm/100, t * freq_per_anum)
-    st.write(f"The Present Value of the bond is: ${present_value:.2f}")
+    present_value = calculate_bond_present_value(coupon_rate/100, par, ytm/100, n)
+    st.write(f"The Present Value of the bond is: ${present_value:.4f}")
     ## Display dataframe
     bonds_dataframe = pd.DataFrame({
         'Coupon Rate (%)': [coupon_rate],
@@ -81,7 +110,7 @@ elif metric == 'Yield to Maturity':
     n = t * freq_per_anum
     price = st.number_input("Market Price ($):", min_value=0.0)
     ytm = calculate_bond_ytm(price, par, t, coupon_rate, freq_per_anum)
-    market_discount_rate = calculate_market_discount_rate(price, par, t, coupon_rate, freq_per_anum)
+    market_discount_rate = calculate_market_discount_rate(price, par, t, coupon_rate/100, freq_per_anum)
     
     st.write(f"The Yield to Maturity (YTM) of the bond is: {ytm*100:.2f}%")
     
@@ -169,7 +198,7 @@ elif metric == 'Market Discount Rate':
 
     n = t * freq_per_anum
     price = st.number_input("Market Price ($):", min_value=0.0)
-    market_discount_rate = calculate_market_discount_rate(price, par, t, coupon_rate, freq_per_anum)
+    market_discount_rate = calculate_market_discount_rate(price, par, t, coupon_rate/100, freq_per_anum)
     st.write(f"The Market Discount Rate (YTM) of the bond is: {market_discount_rate*100:.2f}%")
     ## Display dataframe
     bonds_dataframe = pd.DataFrame({
@@ -181,7 +210,3 @@ elif metric == 'Market Discount Rate':
         'Total Payments': [n],
     })
     st.dataframe(bonds_dataframe)
-
-
-
-
