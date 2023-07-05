@@ -10,7 +10,7 @@ st.warning("Please note that zeros entered into the inputs may result in errors.
 # Initialize the functions
 def calculate_bond_present_value(coupon_rate, face_value, ytm, n):
     pv_selection = st.selectbox("Would you like to use the simple or complex present value formula?", ['Bond Master Pro', 'Annuities Only', 'Lump Sum Only'])
-    if pv_selection == 'Bond Master Pro':
+    if pv_selection == 'Full Payment':
         if coupon_rate == 0:
             return face_value / (1 + ytm)**n
         elif ytm == 0:  # No discounting
@@ -58,7 +58,8 @@ def calculate_market_discount_rate(price, par, t, coupon, freq):
     return optimize.newton(market_discount_rate_func, 0.03)
 
 
-
+def simple_interest_earned(interest_rate_per_period,, number_of_periods,_present_value):
+    return interest_rate_per_period * number_of_periods * _present_value
 # Metric selection
 metric = st.selectbox("Select a bond metric to calculate", ['Present Value', 'Yield to Maturity', 'Coupon Yield', 'Market Discount Rate'])
 
