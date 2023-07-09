@@ -1,4 +1,13 @@
 def calculate_bond_present_value(coupon_rate, face_value, ytm, n):
+    import streamlit as st
+    if not isinstance(coupon_rate, float):
+        coupon_rate = float(coupon_rate)
+    elif coupon_rate >= 1.0:
+        coupon_rate = coupon_rate / 100.0
+    if not isinstance(ytm, float):
+        ytm = float(ytm)
+    elif ytm >= 1.0:
+        ytm = ytm / 100.0
     pv_selection = st.selectbox("Would you like to use the simple or complex present value formula?", ['Bond Master Pro', 'Annuities Only', 'Lump Sum Only'])
     if pv_selection == 'Full Payment':
         if coupon_rate == 0:
